@@ -8,8 +8,6 @@ import java.util.List;
 public class OrderResVO {
     private int orderSeq;
 
-    private String userId;
-
     private boolean valid;
 
     private String message;
