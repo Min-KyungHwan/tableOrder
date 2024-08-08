@@ -1,0 +1,58 @@
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "WEB-INF/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.mkh.tableOrder.api.mapper.ApiMapper">
+
+    <select id="getUserById" parameterType="String" resultType="com.mkh.tableOrder.api.vo.UserVO">
+        select
+            USER_ID as userId, 
+            USER_NM as userName, 
+            PASSWD as password,
+            TOKEN as token,
+            MOD_ID as modId,
+            MOD_DT as modDt,
+            REG_ID as regId,
+            REG_DT as regDt
+        from tb_user_bas
+        where USER_ID = #{userId}
+    </select>
+
+    <update id="updateLoginSuccessful">
+        update
+        TB_USER_BAS
+        set TOKEN = #{token}
+            , MOD_DT = now()
+            , MOD_ID = #{userId}
+        where USER_ID = #{userId}
+    </update>
+    
+    <select id="getCartById" parameterType="String" resultType="com.mkh.tableOrder.api.vo.CartVO">
+        select
+            CART_SEQ as cartItemSeq,
+            USER_ID as userId,
+            MENU_SEQ as menuItemId,
+            QUANTITY as quantity,
+            MOD_ID as modId,
+            MOD_DT as modDt,
+            REG_ID as regId,
+            REG_DT as regDt
+        from tb_cart_bas
+        where USER_ID = #{userId}
+    </select>
+    
+    <insert id="addOrderBas" parameterType="com.mkh.tableOrder.api.vo.OrderVO">
+        INSERT INTO tb_order_bas (USER_ID, RESTAURANT_SEQ, TABLE_NO, REG_ID, REG_DT)
+        VALUES (#{userId}, #{restaurantId}, #{tableNo}, #{userId}, now())
+        <selectKey resultType="int" keyProperty="orderSeq" order="AFTER">
+            SELECT LAST_INSERT_ID()
+        </selectKey>
+    </insert>
+    
+    <insert id="addOrderDtlBas" parameterType="com.mkh.tableOrder.api.vo.OrderVO">
+        INSERT INTO tb_order_dtl (ORDER_SEQ, MENU_SEQ, QUANTITY, PRICE, REG_ID, REG_DT)
+        VALUES
+        <foreach collection="cartList" item="cartVO" separator=",">
+            ( #{orderSeq}, #{cartVO.menuItemId}, #{cartVO.quantity},
+            (SELECT PRICE FROM tb_menu_bas WHERE MENU_SEQ = #{cartVO.menuItemId}),
+            #{userId}, now() )
+        </foreach>
+    </insert>
+</mapper>
